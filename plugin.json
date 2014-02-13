@@ -1,0 +1,16 @@
+{
+    "id": "nodebb-plugin-s3-uploads",
+    "name": "S3 Uploads Plugin",
+    "description": "A plugin that takes file uploads and store them on S3",
+    "url": "https://github.com/KanoComputing/nodebb-plugin-s3-uploads",
+    "library": "./index.js",
+    "staticDirs": ["./public"],
+    "hooks": [
+        { "hook": "action:app.load", "method": "load"},
+        { "hook": "action:plugin.activate", "method": "activate"},
+        { "hook": "action:plugin.deactivate", "method": "deactivate"},
+        { "hook": "filter:uploadImage", "method": "handleUpload", "callbacked": true, "priority": 6 },
+        { "hook": "filter:admin.create_routes", "method": "admin.route", "callbacked": true },
+        { "hook": "filter:admin.header.build", "method": "admin.menu", "callbacked": false }
+    ]
+}
