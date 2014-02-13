@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-s3-uploads",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A plugin for NodeBB to take file uploads and store them on S3",
   "main": "index.js",
   "scripts": {
