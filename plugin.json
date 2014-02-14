@@ -1,5 +1,6 @@
 {
     "id": "nodebb-plugin-s3-uploads",
+    "minver": "0.3.2",
     "name": "S3 Uploads Plugin",
     "description": "A plugin that takes file uploads and store them on S3",
     "url": "https://github.com/KanoComputing/nodebb-plugin-s3-uploads",
