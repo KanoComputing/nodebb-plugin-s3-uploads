@@ -18,6 +18,9 @@
     "uploads"
   ],
   "author": "Micheil Smith <micheil@kano.me>",
+  "contributors": [
+    "Barış Soner Uşaklı <barisusakli@gmail.com>"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/KanoComputing/nodebb-plugin-s3-uploads/issues"
