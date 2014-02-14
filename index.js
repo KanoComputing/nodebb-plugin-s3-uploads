@@ -1,4 +1,3 @@
-
 var Package = require("./package.json");
 
 var AWS = require('aws-sdk'),
@@ -97,21 +96,12 @@ var AWS = require('aws-sdk'),
   };
 
   plugin.handleUpload = function (image, callback) {
-    if(!image || (!image.base64 && !image.file && !image.url)){
+    if(!image || !image.path){
       winston.error(image);
       return callback(makeError("Invalid image data from plugin hook 'filter:uploadImage'"));
     }
 
-    // TODO: Figure out why we'd get an image.url request
-    if(image.url){
-      return callback(makeError("Currently does not support URL based image uploads"));
-    }
-
-    if(image.base64){
-      putObject(null, new Buffer(image.base64, "base64"));
-    }else if(image.file){
-      fs.readFile(image.file, putObject);
-    }
+    fs.readFile(image.path, putObject);
 
     function putObject(err, buffer){
       // Error from FS module:
