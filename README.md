@@ -39,7 +39,7 @@ To use Instance Meta-data, you'll need to setup role delegation, see the followi
 
 **NOTE:** You'll need to pass in the `Bucket` as either an **Environment Variable** or as a **Database Backed Variable**.
 
-If you need help, create an [issue on Github](https://github.com/KanoComputing/nodebb-plugin-s3-uploads/issues/), and @miksago will try to help you out.
+If you need help, create an [issue on Github](https://github.com/KanoComputing/nodebb-plugin-s3-uploads/issues/), and @[miksago](https://github.com/miksago) will try to help you out.
 
 ### Database Backed Variables
 
@@ -49,7 +49,9 @@ From the NodeBB Admin panel, you can configure the following settings to be stor
 * `accessKeyId` — The AWS Access Key Id
 * `secretAccessKey` — The AWS Secret Access Key
 
-**NOTE: Storing your AWS Credentials in the database is bad practice, and you really shouldn't do it.** We highly recommend investigating using either **Environment Variables** or **Instance Meta-data** instead.
+**NOTE: Storing your AWS Credentials in the database is bad practice, and you really shouldn't do it.**
+
+We highly recommend investigating using either **Environment Variables** or **Instance Meta-data** instead.
 
 ## Caveats
 
