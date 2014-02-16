@@ -28,6 +28,10 @@
   "dependencies": {
     "aws-sdk": "~2.0.0-rc9",
     "uuid": "~1.4.1",
-    "mime": "~1.2.11"
+    "mime": "~1.2.11",
+    "async": "~0.2.8"
+  },
+  "peerDependencies": {
+    "async": "~0.2.8"
   }
 }

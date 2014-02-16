@@ -1,5 +1,8 @@
-<h1><i class="fa fa-picture-o"></i> S3 Uploads Configuration</h1>
-<hr />
+<div class="clearfix">
+  <h1 class="pull-left"><i class="fa fa-picture-o"></i> S3 Uploads Configuration</h1>
+  <a class="btn btn-primary pull-right" style="margin-top:20px;" href="/admin/plugins/s3-uploads/migrate">Migrate to S3</a>
+</div>
+<hr>
 
 <p>You can configure this plugin via a combination of the below, for instance, you can use <em>instance meta-data</em> and <em>environment variables</em> in combination. You can also specify values in the form below, and those will be stored in the database.</p>
 
