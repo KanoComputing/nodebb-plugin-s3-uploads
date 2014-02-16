@@ -10,7 +10,8 @@ var AWS = require('aws-sdk'),
   winston = module.parent.require('winston'),
   db = module.parent.require('./database'),
   templates = module.parent.require('./../public/src/templates');
-  User = module.parent.require("./user");
+  User = module.parent.require("./user"),
+  nconf = module.parent.require("nconf");
 
 
 (function(plugin) {
@@ -83,72 +84,9 @@ var AWS = require('aws-sdk'),
     return err;
   }
 
-  function migrateUserPictures(finished){
-    var changes = [];
-    User.getUsers('users:joindate', 0, -1, function(err, users){
-      if(err){
-        finished(err);
-      }
 
-      async.eachLimit(users, 20, function(user, next){
-        if(!user.uploadedpicture){
-          next();
-        }
-        
-        changes.push({ previous: user.uploadedpicture, current: uuid() });
-        next();
-      }, function(err){
-        finished(err, changes);
-      });
-    });
-  }
-
-  function migrate(respond){
-    var results = {
-      userPictures: [],
-      topicPictures: []
-    };
-
-    async.applyEachSeries([
-      migrateUserPictures
-    ], function(results){
-      console.log(arguments);
-
-      var response = "<dl>";
-      // if(results.userPictures.length > 0){
-      //   response += "<dt>User Pictures</dt>";
-      //   results.userPictures.forEach(function(change){
-      //     response += "<dd><code>" + change.previous + " -&gt; " + change.current + "</code></dd>"
-      //   });
-      // }
-
-      respond(null, response);
-    });
-  }
-
-  // Delete settings on deactivate:
-  plugin.activate = function(){
-    fetchSettings();
-  };
-
-  // Delete settings on deactivate:
-  plugin.deactivate = function(){
-    S3Conn = null;
-  };
-
-  plugin.load = function(){
-    fetchSettings();
-  };
-
-  plugin.handleUpload = function (image, callback) {
-    if(!image || !image.path){
-      winston.error(image);
-      return callback(makeError("Invalid image data from plugin hook 'filter:uploadImage'"));
-    }
-
-    fs.readFile(image.path, putObject);
-
-    function putObject(err, buffer){
+  function uploadToS3(image, callback){
+    fs.readFile(image.path, function putObject(err, buffer){
       // Error from FS module:
       if(err){
         return callback(makeError(err));
@@ -174,7 +112,98 @@ var AWS = require('aws-sdk'),
           url: "//" + params.Bucket + ".s3.amazonaws.com/" + params.Key
         });
       });
+    });
+  }
+
+
+  function migrateUserPictures(finished){
+    console.log("migrateUserPictures")
+    var changes = [];
+    User.getUsers('users:joindate', 0, -1, function(err, users){
+      if(err){
+        finished(err);
+      }
+
+      async.eachSeries(users, function(user, next){
+        if(!user.uploadedpicture){
+          return next();
+        }
+        
+        var uploadPath = user.uploadedpicture;
+
+        console.log(path.join(nconf.get('base_dir'), nconf.get('upload_path'), uploadPath));
+        // uploadToS3({
+        //   name: path.basename(uploadPath),
+        //   path: path.join(nconf.get('base_dir'), nconf.get('upload_path'), uploadPath)
+        // }, function(err, image){
+        //   if(err){
+        //     return finished(err);
+        //   }
+
+        //   User.setUserField(updateUid, 'uploadedpicture', image.url);
+        //   User.setUserField(updateUid, 'picture', image.url);
+
+        //   changes.push({ previous: uploadPath, current: image.url });
+        //   next();
+        // });
+      next();
+      }, function(err){
+        console.log("async.eachSeries end")
+        finished(changes);
+      });
+    });
+  }
+
+  function migrate(respond){
+    var results = {
+      userPictures: [],
+      topicPictures: []
+    };
+
+    console.log("migrate")
+
+    async.applyEachSeries([
+      migrateUserPictures
+    ], function(userPictures){
+      if(!Array.isArray(userPictures)){
+        respond(userPictures);
+      }
+
+      var response = "<dl>";
+      if(userPictures.length > 0){
+        response += "<dt>User Pictures</dt>";
+        userPictures.forEach(function(change){
+          response += "<dd><code>" + change.previous + " -&gt; " + change.current + "</code></dd>"
+        });
+      }
+
+      response += "</dl>"
+
+      respond(null, response);
+    });
+  }
+
+  // Delete settings on deactivate:
+  plugin.activate = function(){
+    fetchSettings();
+  };
+
+  // Delete settings on deactivate:
+  plugin.deactivate = function(){
+    S3Conn = null;
+  };
+
+  plugin.load = function(){
+    fetchSettings();
+  };
+
+  plugin.handleUpload = function (image, callback) {
+    if(!image || !image.path){
+      winston.error(image);
+      return callback(makeError("Invalid image data from plugin hook 'filter:uploadImage'"));
     }
+
+    uploadToS3(image, callback);
   }
 
 

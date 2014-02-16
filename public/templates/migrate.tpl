@@ -68,7 +68,7 @@
         return app.alertError(response.err);
       }
 
-      $("#results-modal").find("modal-body").text(response.results);
+      $("#results-modal").find(".modal-body").html(response.results);
       $('#results-modal').modal('show');
     }).fail(function(response){
       app.alertError(response.statusText);
