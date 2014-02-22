@@ -1,5 +1,8 @@
 # NodeBB S3 Uploads Plugin
 
+[![Dependency Status](https://david-dm.org/kanocomputing/nodebb-plugin-s3-uploads.png)](https://david-dm.org/kanocomputing/nodebb-plugin-s3-uploads)
+
+
 | Dependency     | Version Requirement     |
 | -------------- |:-----------------------:|
 | NodeBB         | >= 0.3.2 or [a909a253](https://github.com/designcreateplay/NodeBB/commit/a909a253931c20427c14c777c1bb6629a79d449d) |
