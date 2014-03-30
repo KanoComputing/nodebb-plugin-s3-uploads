@@ -40,34 +40,37 @@ export S3_UPLOADS_BUCKET="zzzz"
 </form>
 
 <script>
-  $("#s3-upload-bucket").on("submit", function(e){
+  $('#s3-upload-bucket').on('submit', function(e) {
     e.preventDefault();
-    save("bucket", this);
+    save('bucket', this);
   });
 
-  $("#s3-upload-credentials").on("submit", function(e){
+  $('#s3-upload-credentials').on('submit', function(e) {
     e.preventDefault();
-    if(confirm("Are you sure you wish to store your credentials for accessing S3 in the database?")){
-      save("credentials", this);
-    }
+    var form = this;
+    bootbox.confirm('Are you sure you wish to store your credentials for accessing S3 in the database?', function(confirm) {
+      if (confirm) {
+        save('credentials', form);
+      }
+    });
   });
 
-  function save(type, form){
+  function save(type, form) {
     var data = {
       _csrf : $('#csrf_token').val()
     };
 
     var values = $(form).serializeArray();
-    for(var i=0, l=values.length; i<l; i++){
+    for(var i=0, l=values.length; i<l; i++) {
       data[values[i].name] = values[i].value;
     }
 
-    $.post('/api/admin/plugins/s3-uploads/' + type, data).done(function(response){
-      if(response.error){
-        app.alertError(response.message);
-      }else{
-        app.alertSuccess(response.message);
+    $.post('/api/admin/plugins/s3-uploads/' + type, data).done(function(response) {
+      if(response){
+        app.alertSuccess(response);
       }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      app.alertError(jqXHR.responseJSON ? jqXHR.responseJSON.error : 'Error saving!');
     });
   }
 </script>
