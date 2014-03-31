@@ -1,6 +1,3 @@
-
-'use strict';
-
 var Package = require('./package.json');
 
 var AWS = require('aws-sdk'),
@@ -14,12 +11,13 @@ var AWS = require('aws-sdk'),
 
 
 (function(plugin) {
+  "use strict";
 
   var S3Conn = null;
   var settings = {
-    accessKeyId: false,
-    secretAccessKey: false,
-    bucket: process.env.S3_UPLOADS_BUCKET || undefined
+    "accessKeyId": false,
+    "secretAccessKey": false,
+    "bucket": process.env.S3_UPLOADS_BUCKET || undefined
   };
 
   var accessKeyIdFromDb = false;
@@ -55,7 +53,7 @@ var AWS = require('aws-sdk'),
       }
 
       if(!newSettings.bucket){
-        settings.bucket = process.env.S3_UPLOADS_BUCKET || '';
+        settings.bucket = process.env.S3_UPLOADS_BUCKET || "";
       }else{
         settings.bucket = newSettings.bucket;
       }
@@ -83,9 +81,9 @@ var AWS = require('aws-sdk'),
 
   function makeError(err){
     if(err instanceof Error){
-      err.message = Package.name + ' :: ' + err.message;
+      err.message = Package.name + " :: " + err.message;
     }else{
-      err = new Error(Package.name + ' :: ' + err);
+      err = new Error(Package.name + " :: " + err);
     }
 
     winston.error(err.message);
@@ -157,7 +155,7 @@ var AWS = require('aws-sdk'),
   plugin.handleUpload = function (image, callback) {
     if(!image || !image.path){
       winston.error(image);
-      return callback(makeError('Invalid image data from plugin hook "filter:uploadImage"'));
+      return callback(makeError("Invalid image data from plugin hook 'filter:uploadImage'"));
     }
 
     fs.readFile(image.path, putObject);
@@ -169,14 +167,14 @@ var AWS = require('aws-sdk'),
 
       var params = {
         Bucket: settings.bucket,
-        ACL: 'public-read',
+        ACL: "public-read",
         Key: uuid() + path.extname(image.name),
         Body: buffer,
         ContentLength: buffer.length,
         ContentType: mime.lookup(image.name)
       };
 
-      S3().putObject(params, function(err) {
+      S3().putObject(params, function(err){
         if(err){
           return callback(makeError(err));
         }
@@ -184,7 +182,7 @@ var AWS = require('aws-sdk'),
         callback(null, {
           name: image.name,
           // Use protocol-less urls so that both HTTP and HTTPS work:
-          url: '//' + params.Bucket + '.s3.amazonaws.com/' + params.Key
+          url: "//" + params.Bucket + ".s3.amazonaws.com/" + params.Key
         });
       });
     }
@@ -194,9 +192,9 @@ var AWS = require('aws-sdk'),
 
   admin.menu = function(headers, callback) {
     headers.plugins.push({
-      route: '/plugins/s3-uploads',
-      icon: 'fa-picture-o',
-      name: 'S3 Uploads'
+      "route": '/plugins/s3-uploads',
+      "icon": 'fa-picture-o',
+      "name": 'S3 Uploads'
     });
 
     callback(null, headers);
