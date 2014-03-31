@@ -1,8 +1,8 @@
-var Package = require('./package.json');
+var Package = require("./package.json");
 
 var AWS = require('aws-sdk'),
-    mime = require('mime'),
-    uuid = require('uuid').v4,
+    mime = require("mime"),
+    uuid = require("uuid").v4,
     fs = require('fs'),
     path = require('path'),
 
