@@ -7,8 +7,7 @@ var AWS = require('aws-sdk'),
     path = require('path'),
 
   winston = module.parent.require('winston'),
-  db = module.parent.require('./database'),
-  templates = module.parent.require('./../public/src/templates');
+  db = module.parent.require('./database');
 
 
 (function(plugin) {
@@ -24,10 +23,16 @@ var AWS = require('aws-sdk'),
   var accessKeyIdFromDb = false;
   var secretAccessKeyFromDb = false;
 
-  function fetchSettings(){
+  var adminRoute = '/admin/plugins/s3-uploads';
+
+  function fetchSettings(callback){
     db.getObjectFields(Package.name, Object.keys(settings), function(err, newSettings){
-      if(err) {
-        return winston.error(err);
+      if (err) {
+        winston.error(err.message);
+        if (typeof callback === 'function') {
+          callback(err);
+        }
+        return;
       }
 
       accessKeyIdFromDb = false;
@@ -59,6 +64,10 @@ var AWS = require('aws-sdk'),
           secretAccessKey: settings.secretAccessKey
         });
       }
+
+      if (typeof callback === 'function') {
+        callback();
+      }
     });
   }
 
@@ -77,23 +86,73 @@ var AWS = require('aws-sdk'),
       err = new Error(Package.name + " :: " + err);
     }
 
-    winston.error(err);
+    winston.error(err.message);
     return err;
   }
 
-  // Delete settings on deactivate:
   plugin.activate = function(){
     fetchSettings();
   };
 
-  // Delete settings on deactivate:
   plugin.deactivate = function(){
     S3Conn = null;
   };
 
-  plugin.load = function(){
-    fetchSettings();
+  plugin.load = function(app, middleware, controllers, callback){
+    fetchSettings(function(err) {
+      if (err) {
+        return winston.error(err.message);
+      }
+
+      app.get(adminRoute, middleware.admin.buildHeader, renderAdmin);
+      app.get('/api' + adminRoute, renderAdmin);
+
+      app.post('/api' + adminRoute + '/bucket', bucket);
+      app.post('/api' + adminRoute + '/credentials', credentials);
+
+      callback();
+    });
   };
+
+  function renderAdmin(req, res) {
+    var data = {
+      bucket: settings.bucket,
+      accessKeyId: (accessKeyIdFromDb && settings.accessKeyId) || '',
+      secretAccessKey: (accessKeyIdFromDb && settings.secretAccessKey) || ''
+    };
+
+    res.render('admin/plugins/s3-uploads', data);
+  }
+
+  function bucket(req, res, next) {
+    var data = req.body;
+    var newSettings = {
+      bucket: data.bucket || ''
+    };
+
+    saveSettings(newSettings, res, next);
+  }
+
+  function credentials(req, res, next) {
+    var data = req.body;
+    var newSettings = {
+      accessKeyId: data.accessKeyId || '',
+      secretAccessKey: data.secretAccessKey || ''
+    };
+
+    saveSettings(newSettings, res, next);
+  }
+
+  function saveSettings(settings, res, next) {
+    db.setObject(Package.name, settings, function(err) {
+      if (err) {
+        return next(makeError(err));
+      }
+
+      fetchSettings();
+      res.json('Saved!');
+    });
+  }
 
   plugin.handleUpload = function (image, callback) {
     if(!image || !image.path){
@@ -104,8 +163,7 @@ var AWS = require('aws-sdk'),
     fs.readFile(image.path, putObject);
 
     function putObject(err, buffer){
-      // Error from FS module:
-      if(err){
+      if(err) {
         return callback(makeError(err));
       }
 
@@ -130,90 +188,18 @@ var AWS = require('aws-sdk'),
         });
       });
     }
-  }
+  };
 
+  var admin = plugin.admin =  {};
 
-  var admin = plugin.admin = {};
-  var adminRoute = "/plugins/s3-uploads";
-
-  admin.menu = function(headers) {
+  admin.menu = function(headers, callback) {
     headers.plugins.push({
-      "route": adminRoute,
+      "route": '/plugins/s3-uploads',
       "icon": 'fa-picture-o',
       "name": 'S3 Uploads'
     });
 
-    return headers;
-  }
+    callback(null, headers);
+  };
 
-  admin.route = function(pluginAdmin, callback) {
-    fs.readFile(path.join(__dirname, 'public/templates/admin.tpl'), function(err, tpl) {
-      if(err){
-        return callback(makeError(err), pluginAdmin);
-      }
-
-      pluginAdmin.routes.push({
-        route: adminRoute,
-        method: 'get',
-        options: function(req, res, next){
-          next({
-            req: req,
-            res: res,
-            route: adminRoute,
-            name: 'S3 Uploads',
-            content: templates.prepare(tpl.toString()).parse({
-              bucket: settings.bucket,
-              accessKeyId: (accessKeyIdFromDb && settings.accessKeyId) || "",
-              secretAccessKey: (accessKeyIdFromDb && settings.secretAccessKey) || ""
-            })
-          });
-        }
-      });
-
-      pluginAdmin.api.push({
-        route: adminRoute + "/bucket",
-        method: 'post',
-        callback: function(req, res, next){
-          var data = req.body;
-          var newSettings = {
-            bucket: data.bucket || ""
-          }
-
-          db.setObject(Package.name, newSettings, function(err, res){
-            if(err){
-              winston.error(makeError(err));
-              return next({ error: true, message: err.toString() });
-            }
-
-            fetchSettings();
-            return next({ error: false, message: 'Saved!' });
-          });
-        }
-      });
-
-      pluginAdmin.api.push({
-        route: adminRoute + "/credentials",
-        method: 'post',
-        callback: function(req, res, next){
-          var data = req.body;
-          var newSettings = {
-            accessKeyId: data.accessKeyId || "",
-            secretAccessKey: data.secretAccessKey || ""
-          };
-
-          db.setObject(Package.name, newSettings, function(err, res){
-            if(err){
-              winston.error(makeError(err));
-              return next({ error: true, message: err.toString() });
-            }
-
-            fetchSettings();
-            return next({ error: false, message: 'Saved!' });
-          });
-        }
-      });
-
-      callback(null, pluginAdmin);
-    });
-  }
 }(module.exports));

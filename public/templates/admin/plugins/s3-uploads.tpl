@@ -47,9 +47,12 @@ export S3_UPLOADS_BUCKET="zzzz"
 
   $("#s3-upload-credentials").on("submit", function(e){
     e.preventDefault();
-    if(confirm("Are you sure you wish to store your credentials for accessing S3 in the database?")){
-      save("credentials", this);
-    }
+    var form = this;
+    bootbox.confirm("Are you sure you wish to store your credentials for accessing S3 in the database?", function(confirm) {
+      if (confirm) {
+        save("credentials", form);
+      }
+    });
   });
 
   function save(type, form){
@@ -63,11 +66,11 @@ export S3_UPLOADS_BUCKET="zzzz"
     }
 
     $.post('/api/admin/plugins/s3-uploads/' + type, data).done(function(response){
-      if(response.error){
-        app.alertError(response.message);
-      }else{
-        app.alertSuccess(response.message);
+      if(response){
+        app.alertSuccess(response);
       }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      app.alertError(jqXHR.responseJSON ? jqXHR.responseJSON.error : 'Error saving!');
     });
   }
 </script>
