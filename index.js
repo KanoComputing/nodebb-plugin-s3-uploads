@@ -98,7 +98,7 @@ var AWS = require('aws-sdk'),
     S3Conn = null;
   };
 
-  plugin.load = function(app, middleware, controllers){
+  plugin.load = function(app, middleware, controllers, callback){
     fetchSettings(function(err) {
       if (err) {
         return winston.error(err.message);
@@ -109,6 +109,8 @@ var AWS = require('aws-sdk'),
 
       app.post('/api' + adminRoute + '/bucket', bucket);
       app.post('/api' + adminRoute + '/credentials', credentials);
+
+      callback();
     });
   };
 

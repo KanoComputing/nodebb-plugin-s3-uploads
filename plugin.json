@@ -9,7 +9,7 @@
         "s3": "public"
     },
     "hooks": [
-        { "hook": "action:app.load", "method": "load"},
+        { "hook": "static:app.load", "method": "load"},
         { "hook": "action:plugin.activate", "method": "activate"},
         { "hook": "action:plugin.deactivate", "method": "deactivate"},
 
